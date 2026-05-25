@@ -71,4 +71,18 @@ esp_err_t ssd1306_set_mode(ssd1306_t *dev, ssd1306_mode_t mode);
  */
 esp_err_t ssd1306_goto(ssd1306_t *dev, uint8_t col, uint8_t page);
 
+/**
+ * @brief Set hardware display window boundaries (Supported in Horizontal/Vertical modes only)
+ * @param dev SSD1306 device structure pointer
+ * @param start_col Start column address (0 to width-1)
+ * @param start_page Start page address (0 to height/8 - 1)
+ * @param end_col End column address (start_col to width-1)
+ * @param end_page End page address (start_page to height/8 - 1)
+ * @return 
+ * - ESP_OK on success
+ * - ESP_ERR_INVALID_ARG if boundaries are invalid or out of bounds
+ * - ESP_ERR_NOT_SUPPORTED if called in Page Mode
+ */
+esp_err_t ssd1306_set_window(ssd1306_t *dev, uint8_t start_col, uint8_t start_page, uint8_t end_col, uint8_t end_page);
+
 #endif /* SSD1306_H */
