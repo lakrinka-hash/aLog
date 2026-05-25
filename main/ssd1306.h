@@ -59,4 +59,16 @@ esp_err_t ssd1306_init(ssd1306_t *dev, uint8_t width, uint8_t height, ssd1306_mo
  */
 esp_err_t ssd1306_set_mode(ssd1306_t *dev, ssd1306_mode_t mode);
 
+/**
+ * @brief Set GDDRAM cursor position (Supported in Page Mode only)
+ * @param dev SSD1306 device structure pointer
+ * @param col Column address (0 to width-1)
+ * @param page Page address (0 to height/8 - 1)
+ * @return 
+ * - ESP_OK on success
+ * - ESP_ERR_INVALID_ARG if coordinates are out of bounds
+ * - ESP_ERR_NOT_SUPPORTED if called in Horizontal/Vertical modes
+ */
+esp_err_t ssd1306_goto(ssd1306_t *dev, uint8_t col, uint8_t page);
+
 #endif /* SSD1306_H */

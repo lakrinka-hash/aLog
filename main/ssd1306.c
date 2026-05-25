@@ -135,3 +135,26 @@ esp_err_t ssd1306_set_mode(ssd1306_t *dev, ssd1306_mode_t mode)
     ESP_LOGI(TAG, "memory mode changed to 0x%02X", (uint8_t)mode);
     return ESP_OK;
 }
+
+esp_err_t ssd1306_goto(ssd1306_t *dev, uint8_t col, uint8_t page)
+{
+    if (col >= dev->width || page >= (dev->height/8)) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    if (dev->mode != SSD1306_MODE_PAGE) {
+        ESP_LOGW(TAG, "function ssd1306_goto is not supported in current mode: 0x%02X",
+                (uint8_t)dev->mode);
+        return ESP_ERR_NOT_SUPPORTED;
+    }
+    esp_err_t ret;
+    uint8_t arg[] = {
+        (uint8_t)(0xB0 | page),
+        (uint8_t)(0x00 | (col & 0x0F)),
+        (uint8_t)(0x10 | ((col >> 4) & 0x0F))
+    };
+    for (size_t i = 0; i < sizeof(arg); i++) {
+        ret = ssd1306_write_command(dev, arg[i]);
+        if (ret != ESP_OK) return ret;
+    }
+    return ESP_OK;
+}
