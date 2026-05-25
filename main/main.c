@@ -54,7 +54,10 @@ void spi_bus_init(void)
 /* ------------- APP Main ------------- */
 void app_main(void)
 {
+    esp_err_t ret;
     i2c_bus_init();
-    ssd1306_attach(i2c_bus_handle, &lcd, SSD1306_ADDR);
+    ret = ssd1306_attach(i2c_bus_handle, &lcd, SSD1306_ADDR);
+    if (ret == ESP_OK) ssd1306_init(&lcd, SSD1306_WIDTH, SSD1306_HEIGHT);
+    else return;
     spi_bus_init();
 }
