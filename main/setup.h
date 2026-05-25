@@ -17,4 +17,9 @@
 #define SPI_SCK             GPIO_NUM_6
 #define SPI_CS              GPIO_NUM_4
 
+// SSD1306
+#define SSD1306_WIDTH       128
+#define SSD1306_HEIGHT      32
+#define SSD1306_ADDR        0x3C
+
 #endif /* SETUP_H */

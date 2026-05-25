@@ -7,10 +7,12 @@
 #include "driver/i2c_master.h"
 #include "driver/spi_master.h"
 #include "setup.h"
+#include "ssd1306.h"
 
 static const char *TAG = "main";
 
 i2c_master_bus_handle_t i2c_bus_handle;
+ssd1306_t lcd;
 
 /* ------ I2C bus initialization ------ */
 void i2c_bus_init(void)
@@ -53,5 +55,6 @@ void spi_bus_init(void)
 void app_main(void)
 {
     i2c_bus_init();
+    ssd1306_attach(i2c_bus_handle, &lcd, SSD1306_ADDR);
     spi_bus_init();
 }
