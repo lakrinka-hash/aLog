@@ -11,4 +11,10 @@
 #define I2C_SDA             GPIO_NUM_10
 #define I2C_SCL             GPIO_NUM_9
 
+// SPI bus
+#define SPI_MISO            GPIO_NUM_5
+#define SPI_MOSI            GPIO_NUM_7
+#define SPI_SCK             GPIO_NUM_6
+#define SPI_CS              GPIO_NUM_4
+
 #endif /* SETUP_H */

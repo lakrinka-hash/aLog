@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "esp_log.h"
 #include "driver/i2c_master.h"
+#include "driver/spi_master.h"
 #include "setup.h"
 
 static const char *TAG = "main";
@@ -29,8 +30,28 @@ void i2c_bus_init(void)
             bus_config.scl_io_num);
 }
 
+/* ------ SPI bus initialization ------ */
+void spi_bus_init(void)
+{
+    spi_bus_config_t bus_config = {
+        .mosi_io_num = SPI_MOSI,
+        .miso_io_num = SPI_MISO,
+        .sclk_io_num = SPI_SCK,
+        .quadwp_io_num = -1,
+        .quadhd_io_num = -1,
+        .max_transfer_sz = 4096
+    };
+    ESP_ERROR_CHECK(spi_bus_initialize(SPI2_HOST, &bus_config, SPI_DMA_CH_AUTO));
+    ESP_LOGI(TAG, "SPI bus initialized on host SPI2");
+    ESP_LOGI(TAG, "SPI bus pin: MISO=%d, MOSI=%d, SCK=%d",
+            bus_config.miso_io_num,
+            bus_config.mosi_io_num,
+            bus_config.sclk_io_num);
+}
+
 /* ------------- APP Main ------------- */
 void app_main(void)
 {
     i2c_bus_init();
+    spi_bus_init();
 }
