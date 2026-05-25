@@ -6,6 +6,8 @@ idf_component_register(
         "."
 
     REQUIRES
+        esp_driver_gpio
+        esp_driver_i2c
     
     PRIV_REQUIRES
     
