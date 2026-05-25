@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    "espressif.esp-idf-extension",
+    "llvm-vs-code-extensions.clangd",
+    "MS-CEINTL.vscode-language-pack-ru"
+  ]
+}

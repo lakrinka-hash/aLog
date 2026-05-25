@@ -1,0 +1,38 @@
+# --- VS Code Configurations ---
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/c_cpp_properties.json
+!.vscode/extensions.json
+
+# --- Tools & Language Servers ---
+.ccls-cache/
+compile_commands.json
+!.clangd
+
+# --- Devcontainers ---
+.devcontainer/*
+!.devcontainer/devcontainer.json
+!.devcontainer/Dockerfile
+
+# --- ESP-IDF / CMake ---
+build/
+**/build/
+build_*_*/
+sdkconfig.old
+managed_components/
+dependencies.lock
+
+# If ESP-IDF tools are installed/referenced locally to the project
+.espressif/
+
+# Python environment files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# Virtual environment folders
+venv/
+.venv/
+env/

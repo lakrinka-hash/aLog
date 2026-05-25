@@ -1,0 +1,13 @@
+CompileFlags:
+  CompilationDatabase: "build"
+  Add: [
+    "-isystem", "/home/termit/.espressif/tools/esp-clang/esp-20.1.1_20250829/esp-clang/lib/clang/20/include"
+  ]
+  Remove: [
+    "-fno-shrink-wrap",
+    "-fstrict-volatile-bitfields",
+    "-fno-tree-switch-conversion",
+    "-fzero-init-padding-bits=all",
+    "-fno-malloc-dce"
+  ]
+

@@ -1,0 +1,20 @@
+{
+  "idf.currentSetup": "/home/termit/.espressif/v6.0.1/esp-idf",
+  "idf.openOcdConfigs": [
+    "board/esp32c3-builtin.cfg"
+  ],
+  "idf.port": "detect",
+  "idf.customExtraVars": {
+    "IDF_TARGET": "esp32c3"
+  },
+  "idf.extensionActivationMode": "always",
+  "C_Cpp.intelliSenseEngine": "disabled",
+  "clangd.path": "/home/termit/.espressif/tools/esp-clang/esp-20.1.1_20250829/esp-clang/bin/clangd",
+  "clangd.arguments": [
+    "--background-index",
+    "--query-driver=**",
+    "--compile-commands-dir=${workspaceFolder}/build",
+    "--clang-tidy"
+  ]
+}
+

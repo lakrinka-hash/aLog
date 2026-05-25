@@ -1,0 +1,34 @@
+{
+  "name": "ESP-IDF QEMU C3",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "DOCKER_TAG": "release-v6.0"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "idf.gitPath": "/usr/bin/git",
+        "C_Cpp.intelliSenseEngine": "disabled",
+        "clangd.path": "/opt/esp/tools/esp-clang/esp-20.1.1_20250829/esp-clang/bin/clangd",
+        "clangd.arguments": [
+          "--background-index",
+          "--query-driver=**",
+          "--compile-commands-dir=${workspaceFolder}/build"
+        ]
+      },
+      "extensions": [
+        "espressif.esp-idf-extension",
+        "espressif.esp-idf-web",
+        "llvm-vs-code-extensions.clangd",
+		"MS-CEINTL.vscode-language-pack-ru"
+      ]
+    }
+  },
+  "runArgs": [
+    "--privileged",
+    "-v", "/dev:/dev"
+  ]
+}
