@@ -85,4 +85,12 @@ esp_err_t ssd1306_goto(ssd1306_t *dev, uint8_t col, uint8_t page);
  */
 esp_err_t ssd1306_set_window(ssd1306_t *dev, uint8_t start_col, uint8_t start_page, uint8_t end_col, uint8_t end_page);
 
+/**
+ * @brief Clear the entire display (Fills GDDRAM with 0x00)
+ * @note Automatically adapts the clearing method based on the current dev->mode.
+ * @param dev SSD1306 device structure pointer
+ * @return ESP_OK on success, or error code on failure
+ */
+esp_err_t ssd1306_clear(ssd1306_t *dev);
+
 #endif /* SSD1306_H */

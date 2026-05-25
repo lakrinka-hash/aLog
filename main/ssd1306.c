@@ -180,3 +180,35 @@ esp_err_t ssd1306_set_window(ssd1306_t *dev, uint8_t start_col, uint8_t start_pa
     }
     return ESP_OK;
 }
+
+esp_err_t ssd1306_clear(ssd1306_t *dev)
+{
+    esp_err_t ret;
+
+    // Clear display in Page mode
+    if (dev->mode == SSD1306_MODE_PAGE) {
+        uint8_t nullpage[dev->width + 1];  // +1 for control byte
+        memset(nullpage, 0, sizeof(nullpage));
+        nullpage[0] = 0x40;  // control byte: data
+
+        for (uint8_t page = 0; page < dev->height/8; page++) {
+            ret = ssd1306_goto(dev, 0, page);
+            if (ret != ESP_OK) return ret;
+            ret = i2c_master_transmit(dev->handle, nullpage, sizeof(nullpage), -1);
+            if (ret != ESP_OK) return ret;
+        }
+    
+    // Clear display in Horizontal / Vertical mode
+    } else {
+        ret = ssd1306_set_window(dev, 0, 0, dev->width-1, (dev->height/8)-1);
+        if (ret != ESP_OK) return ret;
+        size_t buffer_size = dev->width * (dev->height/8) + 1;  // +1 for control byte
+        uint8_t nullbuffer[buffer_size];
+        memset(nullbuffer, 0, buffer_size);
+        nullbuffer[0] = 0x40;  // control byte: data
+
+        ret = i2c_master_transmit(dev->handle, nullbuffer, buffer_size, -1);
+        if (ret != ESP_OK) return ret;
+    }
+    return ESP_OK;
+}
