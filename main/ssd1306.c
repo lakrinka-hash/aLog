@@ -2,6 +2,7 @@
  * ssd1306.c
  */
 
+#include <string.h>
 #include "esp_log.h"
 #include "setup.h"
 #include "ssd1306.h"
@@ -67,10 +68,11 @@ static esp_err_t ssd1306_write_data(ssd1306_t *dev, const uint8_t *buffer, size_
 }
 
 /* -------- Initialization sequence -------- */
-esp_err_t ssd1306_init(ssd1306_t *dev, uint8_t width, uint8_t height)
+esp_err_t ssd1306_init(ssd1306_t *dev, uint8_t width, uint8_t height, ssd1306_mode_t mode)
 {
     dev->width = width;
     dev->height = height;
+    dev->mode = mode;
 
     // 0x1F - 32MUX for 128x32 display / 0x3F - 64MUX for 128x64 display
     uint8_t mux = (height == 32) ? 0x1F : 0x3F;
@@ -82,7 +84,7 @@ esp_err_t ssd1306_init(ssd1306_t *dev, uint8_t width, uint8_t height)
         SSD1306_MULTIPLEX,             // Set multiplex ratio:
         mux,                           // 0x1F - 32MUX for 128x32 display / 0x3F - 64MUX for 128x64 display
         SSD1306_MEMORYMODE,            // Memory addressing mode:
-        0x02,                          // 0x00 - horizontal / 0x01 - vertical / 0x02 - page addressing mode
+        (uint8_t)dev->mode,            // 0x00 - horizontal / 0x01 - vertical / 0x02 - page addressing mode
         SSD1306_STARTLINE | 0x00,      // Set start line to 0
         SSD1306_OFFSET,                // Set display offset:
         0x00,                          // No offset
@@ -114,5 +116,22 @@ esp_err_t ssd1306_init(ssd1306_t *dev, uint8_t width, uint8_t height)
         }
     }
     ESP_LOGI(TAG, "initialization commands sent successfully");
+    return ESP_OK;
+}
+
+esp_err_t ssd1306_set_mode(ssd1306_t *dev, ssd1306_mode_t mode)
+{
+    if (dev->mode == mode) return ESP_OK;
+    esp_err_t ret;
+    uint8_t arg[] = {
+        SSD1306_MEMORYMODE,
+        (uint8_t)mode
+    };
+    for (size_t i = 0; i < sizeof(arg); i++) {
+        ret = ssd1306_write_command(dev, arg[i]);
+        if (ret != ESP_OK) return ret;
+    }
+    dev->mode = mode;
+    ESP_LOGI(TAG, "memory mode changed to 0x%02X", (uint8_t)mode);
     return ESP_OK;
 }

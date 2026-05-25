@@ -57,7 +57,7 @@ void app_main(void)
     esp_err_t ret;
     i2c_bus_init();
     ret = ssd1306_attach(i2c_bus_handle, &lcd, SSD1306_ADDR);
-    if (ret == ESP_OK) ssd1306_init(&lcd, SSD1306_WIDTH, SSD1306_HEIGHT);
+    if (ret == ESP_OK) ssd1306_init(&lcd, SSD1306_WIDTH, SSD1306_HEIGHT, SSD1306_MODE_PAGE);
     else return;
     spi_bus_init();
 }
