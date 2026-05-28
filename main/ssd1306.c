@@ -212,3 +212,8 @@ esp_err_t ssd1306_clear(ssd1306_t *dev)
     }
     return ESP_OK;
 }
+
+void ssd1306_set_font(ssd1306_t *dev, const font_mono_t *font)
+{
+    dev->font = font;
+}

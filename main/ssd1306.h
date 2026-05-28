@@ -8,6 +8,7 @@
 
 #include "esp_err.h"
 #include "driver/i2c_master.h"
+#include "fonts.h"
 
 /**
  * @brief SSD1306 memory addressing modes
@@ -28,6 +29,7 @@ typedef struct {
     uint8_t width;                    ///< Display width in pixels
     uint8_t height;                   ///< Display height in pixels
     ssd1306_mode_t mode;              ///< Current memory addressing mode
+    const font_mono_t *font;          ///< Current font pointer
 } ssd1306_t;
 
 /**
@@ -92,5 +94,12 @@ esp_err_t ssd1306_set_window(ssd1306_t *dev, uint8_t start_col, uint8_t start_pa
  * @return ESP_OK on success, or error code on failure
  */
 esp_err_t ssd1306_clear(ssd1306_t *dev);
+
+/**
+ * @brief Set the active font for the SSD1306 device
+ * @param dev SSD1306 device structure pointer
+ * @param font Pointer to the monochromatic font descriptor structure
+ */
+void ssd1306_set_font(ssd1306_t *dev, const font_mono_t *font);
 
 #endif /* SSD1306_H */

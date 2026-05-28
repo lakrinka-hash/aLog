@@ -8,6 +8,7 @@
 #include "driver/spi_master.h"
 #include "setup.h"
 #include "ssd1306.h"
+#include "fonts.h"
 
 static const char *TAG = "main";
 
@@ -60,4 +61,5 @@ void app_main(void)
     if (ret == ESP_OK) ssd1306_init(&lcd, SSD1306_WIDTH, SSD1306_HEIGHT, SSD1306_MODE_PAGE);
     else return;
     spi_bus_init();
+    ssd1306_set_font(&lcd, &font8x8uk);
 }
