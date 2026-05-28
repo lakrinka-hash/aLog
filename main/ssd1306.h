@@ -102,4 +102,22 @@ esp_err_t ssd1306_clear(ssd1306_t *dev);
  */
 void ssd1306_set_font(ssd1306_t *dev, const font_mono_t *font);
 
+/**
+ * @brief Draw a single character on the SSD1306
+ * @param dev SSD1306 device structure pointer
+ * @param c Character to draw
+ * @return  ESP_OK on success, ESP_ERR_INVALID_ARG if configuration is invalid,
+ * or I2C transmission error code on failure
+ */
+esp_err_t ssd1306_draw_char(ssd1306_t *dev, char c);
+
+/**
+ * @brief Draw a string on the SSD1306 display using a single I2C transmission
+ * @param dev SSD1306 device structure pointer
+ * @param str Null-terminated string to draw
+ * @return ESP_OK on success, ESP_ERR_INVALID_ARG if inputs are invalid,
+ * or I2C transmission error code on failure
+ */
+esp_err_t ssd1306_draw_string(ssd1306_t *dev, const char *str);
+
 #endif /* SSD1306_H */

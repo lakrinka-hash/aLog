@@ -217,3 +217,39 @@ void ssd1306_set_font(ssd1306_t *dev, const font_mono_t *font)
 {
     dev->font = font;
 }
+
+esp_err_t ssd1306_draw_char(ssd1306_t *dev, char c)
+{
+    if (dev->font == NULL || dev->font->data == NULL) return ESP_ERR_INVALID_ARG;
+    if (c < dev->font->first_char || c > dev->font->last_char) c='?';
+
+    uint8_t buffer[dev->font->width + 1];  // +1 for control byte
+    buffer[0] = 0x40;  // data control byte
+
+    size_t index = c - dev->font->first_char;
+    const uint8_t *bitmap = &dev->font->data[index * dev->font->width];
+    memcpy(&buffer[1], bitmap, dev->font->width);
+
+    return i2c_master_transmit(dev->handle, buffer, sizeof(buffer), -1);
+}
+
+esp_err_t ssd1306_draw_string(ssd1306_t *dev, const char *str)
+{
+    if (str == NULL || dev->font == NULL || dev->font->data == NULL) return ESP_ERR_INVALID_ARG;
+    size_t len = strlen(str);
+    uint8_t buffer[len * dev->font->width + 1];  // +1 for control byte
+    buffer[0] = 0x40;
+
+    size_t count = 1;
+    while (*str != '\0') {
+        char c = *str++;
+        if (c < dev->font->first_char || c > dev->font->last_char) c='?';
+
+        size_t index = c - dev->font->first_char;
+        const uint8_t *bitmap = &dev->font->data[index * dev->font->width];
+        memcpy(&buffer[count], bitmap, dev->font->width);
+        count += dev->font->width;
+    }
+    if (count <= 1) return ESP_OK;
+    return i2c_master_transmit(dev->handle, buffer, count, -1);
+}
