@@ -4,7 +4,6 @@
 
 #include <string.h>
 #include "esp_log.h"
-#include "setup.h"
 #include "ssd1306.h"
 
 /* --- SSD1306 command definitions --- */
@@ -184,30 +183,21 @@ esp_err_t ssd1306_set_window(ssd1306_t *dev, uint8_t start_col, uint8_t start_pa
 esp_err_t ssd1306_clear(ssd1306_t *dev)
 {
     esp_err_t ret;
+    uint8_t nullpage[dev->width + 1];  // +1 for control byte
+    memset(nullpage, 0, sizeof(nullpage));
+    nullpage[0] = 0x40;  // control byte: data
+    uint8_t page = dev->height/8;
 
-    // Clear display in Page mode
-    if (dev->mode == SSD1306_MODE_PAGE) {
-        uint8_t nullpage[dev->width + 1];  // +1 for control byte
-        memset(nullpage, 0, sizeof(nullpage));
-        nullpage[0] = 0x40;  // control byte: data
-
-        for (uint8_t page = 0; page < dev->height/8; page++) {
+    if (dev->mode != SSD1306_MODE_PAGE) {
+        ret = ssd1306_set_window(dev, 0, 0, dev->width-1, page-1);
+        if (ret != ESP_OK) return ret;
+    }
+    while (page--) {
+        if (dev->mode == SSD1306_MODE_PAGE) {
             ret = ssd1306_goto(dev, 0, page);
             if (ret != ESP_OK) return ret;
-            ret = i2c_master_transmit(dev->handle, nullpage, sizeof(nullpage), -1);
-            if (ret != ESP_OK) return ret;
         }
-    
-    // Clear display in Horizontal / Vertical mode
-    } else {
-        ret = ssd1306_set_window(dev, 0, 0, dev->width-1, (dev->height/8)-1);
-        if (ret != ESP_OK) return ret;
-        size_t buffer_size = dev->width * (dev->height/8) + 1;  // +1 for control byte
-        uint8_t nullbuffer[buffer_size];
-        memset(nullbuffer, 0, buffer_size);
-        nullbuffer[0] = 0x40;  // control byte: data
-
-        ret = i2c_master_transmit(dev->handle, nullbuffer, buffer_size, -1);
+        ret = i2c_master_transmit(dev->handle, nullpage, sizeof(nullpage), -1);
         if (ret != ESP_OK) return ret;
     }
     return ESP_OK;
@@ -220,7 +210,7 @@ void ssd1306_set_font(ssd1306_t *dev, const font_mono_t *font)
 
 esp_err_t ssd1306_draw_char(ssd1306_t *dev, char c)
 {
-    if (dev->font == NULL || dev->font->data == NULL) return ESP_ERR_INVALID_ARG;
+    if (!dev->font || !dev->font->data) return ESP_ERR_INVALID_ARG;
     if (c < dev->font->first_char || c > dev->font->last_char) c='?';
 
     uint8_t buffer[dev->font->width + 1];  // +1 for control byte
@@ -235,7 +225,7 @@ esp_err_t ssd1306_draw_char(ssd1306_t *dev, char c)
 
 esp_err_t ssd1306_draw_string(ssd1306_t *dev, const char *str)
 {
-    if (str == NULL || dev->font == NULL || dev->font->data == NULL) return ESP_ERR_INVALID_ARG;
+    if (!str || !dev->font || !dev->font->data) return ESP_ERR_INVALID_ARG;
     size_t len = strlen(str);
     uint8_t buffer[len * dev->font->width + 1];  // +1 for control byte
     buffer[0] = 0x40;

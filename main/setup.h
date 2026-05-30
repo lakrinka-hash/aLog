@@ -5,7 +5,7 @@
 #ifndef SETUP_H
 #define SETUP_H
 
-#include "driver/gpio.h"
+#include "driver/gpio.h" // IWYU pragma: keep
 
 // I2C bus
 #define I2C_SDA             GPIO_NUM_10

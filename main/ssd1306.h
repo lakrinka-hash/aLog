@@ -7,7 +7,7 @@
 #define SSD1306_H
 
 #include "esp_err.h"
-#include "driver/i2c_master.h"
+#include "driver/i2c_master.h" // IWYU pragma: keep
 #include "fonts.h"
 
 /**

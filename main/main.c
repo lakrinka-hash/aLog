@@ -2,10 +2,9 @@
  * main.c
  */
 
-#include <stdio.h>
 #include "esp_log.h"
 #include "driver/i2c_master.h"
-#include "driver/spi_master.h"
+#include "driver/spi_master.h" // IWYU pragma: keep
 #include "setup.h"
 #include "ssd1306.h"
 #include "fonts.h"
