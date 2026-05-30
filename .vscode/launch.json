@@ -2,10 +2,9 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "ESP-IDF: Launch",
-      "type": "espidf",
-      "request": "launch",
-      "manual": false
+      "type": "gdbtarget",
+      "request": "attach",
+      "name": "Eclipse CDT GDB Adapter"
     }
   ]
 }
