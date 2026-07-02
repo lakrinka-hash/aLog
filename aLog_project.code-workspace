@@ -1,0 +1,15 @@
+{
+  "folders": [
+    { "name": "🛠️ Firmware (ESP-IDF)", "path": "firmware" },
+    { "name": "📊 Telemetry (DevOps)", "path": "telemetry" },
+    { "name": "📂 Docs", "path": "docs" }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/firmware": true,
+      "**/telemetry": true,
+      "**/docs": true,
+      "**/.git": true
+    }
+  }
+}

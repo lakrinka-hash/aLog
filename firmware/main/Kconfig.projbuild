@@ -1,0 +1,284 @@
+menu "aLog Project Configuration"
+
+    menu "Device Connection Configuration"
+
+        config APP_I2C_SDA_PIN
+            int "I2C Bus SDA Pin"
+            default 10
+
+        config APP_I2C_SCL_PIN
+            int "I2C Bus SCL Pin"
+            default 9
+
+        config APP_I2C_PORT
+            int "I2C Port Number"
+            range 0 1
+            default 0
+            help
+                Port0 = I2C_NUM_0 / Port1 = I2C_NUM_1
+
+        config APP_SPI_MISO_PIN
+            int "SPI Bus MISO Pin"
+            default 5
+
+        config APP_SPI_MOSI_PIN
+            int "SPI Bus MOSI Pin"
+            default 7
+
+        config APP_SPI_SCK_PIN
+            int "SPI Bus SCK Pin"
+            default 6
+
+        config APP_SPI_HOST
+            int "SPI Bus Host ID"
+            range 1 2
+            default 1
+            help
+                ID1 = SPI2_HOST / ID2 = SPI3_HOST
+
+        config APP_SD_CS_PIN
+            int "SD Card CS Pin"
+            default 4
+
+        config APP_PWR_CTRL_PIN
+            int "Power Control Pin"
+            default 0
+
+        config APP_ADS1115_DRDY_PIN
+            int "ADS1115 DRDY Pin"
+            default 1
+
+        config APP_LED_PIN
+            int "Led Pin"
+            default 8
+
+        config APP_RLY1_PIN
+            int "RLY1 Pin"
+            default 2
+
+        config APP_RLY2_PIN
+            int "RLY2 Pin"
+            default 3
+
+    endmenu
+
+    menu "Device Hardware Configuration"
+
+        config APP_SSD1306_ADDR
+            hex "SSD1306 I2C Bus Address"
+            default 0x3C
+
+        config APP_SSD1306_WIDTH
+            int "SSD1306 Display Width"
+            default 128
+
+        config APP_SSD1306_HEIGHT
+            int "SSD1306 Display Height"
+            default 32
+
+        config APP_ADS1115_ADDR
+            hex "ADS1115 I2C Bus Address"
+            default 0x48
+
+    endmenu
+
+    menu "Device Software Configuration"
+
+        choice CONFIG_APP_ADS1115_RATE_CHOICE
+            prompt "ADS1115 Data Rate Samples Per Second (SPS) options"
+            default APP_ADS1115_RATE_128SPS
+            config APP_ADS1115_RATE_8SPS
+                bool "Data Rate 8 SPS"
+            config APP_ADS1115_RATE_16SPS
+                bool "Data Rate 16 SPS"
+            config APP_ADS1115_RATE_32SPS
+                bool "Data Rate 32 SPS"
+            config APP_ADS1115_RATE_64SPS
+                bool "Data Rate 64 SPS"
+            config APP_ADS1115_RATE_128SPS
+                bool "Data Rate 128 SPS"
+            config APP_ADS1115_RATE_250SPS
+                bool "Data Rate 50 SPS"
+            config APP_ADS1115_RATE_475SPS
+                bool "Data Rate 475 SPS"
+            config APP_ADS1115_RATE_860SPS
+                bool "Data Rate 860 SPS"
+        endchoice
+        config APP_ADS1115_RATE
+            hex
+            default 0x0000 if APP_ADS1115_RATE_8SPS
+            default 0x0020 if APP_ADS1115_RATE_16SPS
+            default 0x0040 if APP_ADS1115_RATE_32SPS
+            default 0x0060 if APP_ADS1115_RATE_64SPS
+            default 0x0080 if APP_ADS1115_RATE_128SPS
+            default 0x00A0 if APP_ADS1115_RATE_250SPS
+            default 0x00C0 if APP_ADS1115_RATE_475SPS
+            default 0x00E0 if APP_ADS1115_RATE_860SPS
+            default 0x0080
+
+        choice CONFIG_APP_ADS1115_PGA_CHOICE
+            prompt "ADS1115 Programmable Gain Amplifier (PGA) options"
+            default APP_ADS1115_PGA_4096mV
+            config APP_ADS1115_PGA_6144mV
+                bool "PGA 6144 mV"
+            config APP_ADS1115_PGA_4096mV
+                bool "PGA 4096 mV"
+            config APP_ADS1115_PGA_2048mV
+                bool "PGA 2048 mV"
+            config APP_ADS1115_PGA_1024mV
+                bool "PGA 1024 mV"
+            config APP_ADS1115_PGA_0512mV
+                bool "PGA 512 mV"
+            config APP_ADS1115_PGA_0256mV
+                bool "PGA 256 mV"
+        endchoice
+        config APP_ADS1115_PGA
+            hex
+            default 0x0000 if APP_ADS1115_PGA_6144mV
+            default 0x0200 if APP_ADS1115_PGA_4096mV
+            default 0x0400 if APP_ADS1115_PGA_2048mV
+            default 0x0600 if APP_ADS1115_PGA_1024mV
+            default 0x0800 if APP_ADS1115_PGA_0512mV
+            default 0x0A00 if APP_ADS1115_PGA_0256mV
+            default 0x0200
+
+    endmenu
+
+    menu "Modules Software Configuration"
+
+        choice CONFIG_APP_SD_LOG_BUFFER_SIZE_CHOICE
+            prompt "FATFS Stream Buffer Size"
+            default APP_SD_LOG_BUFFER_4096
+            help
+                Size of the heap-allocated buffer bound to the active log file via setvbuf.
+                Must be a multiple of the sector size (512 bytes).
+            config APP_SD_LOG_BUFFER_512
+                bool "512 Bytes"
+            config APP_SD_LOG_BUFFER_1024
+                bool "1024 Bytes"
+            config APP_SD_LOG_BUFFER_2048
+                bool "2048 Bytes"
+            config APP_SD_LOG_BUFFER_4096
+                bool "4096 Bytes"
+            config APP_SD_LOG_BUFFER_8192
+                bool "8192 Bytes"
+        endchoice
+        config APP_SD_LOG_BUFFER_SIZE
+            int
+            default 512 if APP_SD_LOG_BUFFER_512
+            default 1024 if APP_SD_LOG_BUFFER_1024
+            default 2048 if APP_SD_LOG_BUFFER_2048
+            default 4096 if APP_SD_LOG_BUFFER_4096
+            default 8192 if APP_SD_LOG_BUFFER_8192
+            default 4096
+
+        config APP_SD_FLUSH_INTERVAL_SEC
+            int "SD File Flush Interval (seconds)"
+            range 1 100
+            default 10
+            help
+                Time interval in seconds before forcing an internal fflush()
+                and VFS fsync() to protect data against power loss.
+
+        config APP_MAX_UNSYNCED_FILES
+            int "Maximum unsynced log files limit"
+            default 100
+            range 1 65534
+
+    endmenu
+
+    menu "System Task Configuration"
+
+
+        config APP_ADC_TASK_STACK
+            int "ADC Task Stack Size"
+            range 1024 16384
+            default 1536
+            help
+                Stack size allocated for the ADC sampling task.
+
+        config APP_ADC_TASK_DELAY_MS
+            int "ADC Task Refresh Period (ms)"
+            default 500
+
+        config APP_ADC_CONVERT_DELAY_MS
+            int
+            default 130 if APP_ADS1115_RATE_8SPS
+            default 70 if APP_ADS1115_RATE_16SPS
+            default 35 if APP_ADS1115_RATE_32SPS
+            default 18 if APP_ADS1115_RATE_64SPS
+            default 10 if APP_ADS1115_RATE_128SPS
+            default 5 if APP_ADS1115_RATE_250SPS
+            default 3 if APP_ADS1115_RATE_475SPS
+            default 2 if APP_ADS1115_RATE_860SPS
+            default 10
+
+        config APP_LCD_TASK_STACK
+            int "LCD Task Stack Size"
+            range 1536 16384
+            default 1792
+            help
+                Stack size allocated for the SSD1306 display update task.
+
+        config APP_LCD_TASK_DELAY_MS
+            int "LCD Task Refresh Period (ms)"
+            default 250
+
+        config APP_LOG_TASK_STACK
+            int "LOG Task Stack Size"
+            range 2048 32768
+            default 3328
+            help
+                Stack size allocated for the FATFS SD storage task.
+
+        config APP_LOG_TASK_DELAY_MS
+            int "LOG Task Refresh Period (ms)"
+            default 1000
+
+        config APP_PWR_TASK_STACK
+            int "PWR Task Stack Size"
+            range 1024 16384
+            default 1536
+
+        config APP_UDP_TASK_STACK
+            int "UDP Task Stack Size"
+            range 1024 16384
+            default 1792
+
+        config APP_UDP_TASK_DELAY_MS
+            int "UDP Task Refresh Period (ms)"
+            default 1000
+
+        config APP_WIFI_TASK_STACK
+            int "WIFI Task Stack Size"
+            range 1536 16384
+            default 2048
+
+        config APP_WIFI_TASK_DELAY_MS
+            int "WiFi Task Refresh Period (ms)"
+            default 10000
+
+    endmenu
+
+    menu "Network configuration"
+
+        config APP_WIFI_STA_SSID
+            string "Wi-Fi Station Target SSID"
+            default "hp840"
+
+        config APP_WIFI_STA_PASS
+            string "Wi-Fi Station Password"
+            default "rst579599"
+
+        config APP_UDP_TARGET_IP
+            string "UDP Broadcast/Target IP Address"
+            default "10.42.0.1"
+
+        config APP_UDP_TARGET_PORT
+            int "UDP Target Port"
+            range 3000 5000
+            default 5000
+        
+    endmenu
+
+endmenu
