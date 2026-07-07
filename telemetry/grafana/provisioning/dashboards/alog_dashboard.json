@@ -1,0 +1,49 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": 1,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Метрики питания (Напряжение, Ток, Мощность)",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "InfluxDB_aLog" },
+          "query": "from(bucket: \"alog_metrics\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"power_monitor\")\n  |> filter(fn: (r) => r[\"_field\"] == \"voltage\" or r[\"_field\"] == \"current\" or r[\"_field\"] == \"power\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "legend": { "calcs": ["last", "max"], "displayMode": "table", "placement": "bottom" }
+      }
+    },
+    {
+      "type": "state-timeline",
+      "title": "Статус Реле 1 и Реле 2",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 12 },
+      "id": 2,
+      "targets": [
+        {
+          "datasource": { "type": "influxdb", "uid": "InfluxDB_aLog" },
+          "query": "from(bucket: \"alog_metrics\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"power_monitor\")\n  |> filter(fn: (r) => r[\"_field\"] == \"relay1\" or r[\"_field\"] == \"relay2\")\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\n  |> yield(name: \"last\")",
+          "refId": "B"
+        }
+      ]
+    }
+  ],
+  "refresh": "1s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [],
+  "time": { "from": "now-5m", "to": "now" },
+  "timepicker": { "refresh_intervals": ["1s", "5s", "10s"] },
+  "timezone": "browser",
+  "title": "Телеметрия устройства aLog",
+  "version": 1
+}

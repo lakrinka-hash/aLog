@@ -40,6 +40,10 @@ typedef struct {
     const font_mono_t *font;          ///< Current font pointer
 } ssd1306_t;
 
+/* ========================================================================= */
+/*                           PUBLIC API PROTOTYPES                           */
+/* ========================================================================= */
+
 /**
  * @brief Attach SSD1306 device to I2C bus
  *

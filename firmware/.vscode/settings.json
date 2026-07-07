@@ -12,15 +12,6 @@
   ],
   "idf.customExtraVars": {
     "IDF_TARGET": "esp32c3"
-  },
-  
-  "C_Cpp.intelliSenseEngine": "disabled",
-  "clangd.path": "/home/termit/.espressif/tools/esp-clang/esp-20.1.1_20250829/esp-clang/bin/clangd",
-  "clangd.arguments": [
-    "--background-index",
-    "--query-driver=**",
-    "--compile-commands-dir=${workspaceFolder}/firmware/build",
-    "--clang-tidy"
-  ]
+  }
 }
 

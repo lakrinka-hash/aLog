@@ -1,0 +1,54 @@
+services:
+  # --- INFLUXDB ---
+  influxdb:
+    image: influxdb:2.7
+    container_name: alog_influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET}
+      - DOCKER_INFLUXDB_INIT_RETENTION=4w
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_ADMIN_TOKEN}
+
+    volumes:
+      - ./data/influxdb:/var/lib/influxdb2
+    restart: unless-stopped
+
+  # --- TELEGRAF ---
+  telegraf:
+    image: telegraf:1.30
+    container_name: alog_telegraf
+    ports:
+      - "5000:5000/udp"
+    environment:
+      - INFLUXDB_ADMIN_TOKEN=${INFLUXDB_ADMIN_TOKEN}
+      - INFLUXDB_ORG=${INFLUXDB_ORG}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET}
+    volumes:
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    depends_on:
+      - influxdb
+    restart: unless-stopped
+
+  # --- GRAFANA ---
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: alog_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - INFLUXDB_ADMIN_TOKEN=${INFLUXDB_ADMIN_TOKEN}
+      - INFLUXDB_ORG=${INFLUXDB_ORG}
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET}
+    volumes:
+      - ./data/grafana:/var/lib/grafana
+      # Прокидываем файлы авто-инициализации:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini:ro
+    depends_on:
+      - influxdb
+    restart: unless-stopped

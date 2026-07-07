@@ -10,6 +10,15 @@
       "**/telemetry": true,
       "**/docs": true,
       "**/.git": true
-    }
+    },
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "clangd.path": "/home/termit/.espressif/tools/esp-clang/esp-20.1.1_20250829/esp-clang/bin/clangd",
+    "clangd.arguments": [
+      "--background-index",
+      "--query-driver=**",
+      // Используем точное имя папки воркспейса со слэшем!
+      "--compile-commands-dir=${workspaceFolder:🛠️ Firmware (ESP-IDF)}/build",
+      "--clang-tidy"
+    ]
   }
 }
