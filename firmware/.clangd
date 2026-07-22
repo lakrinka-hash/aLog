@@ -4,6 +4,7 @@ CompileFlags:
     "-isystem", "/home/termit/.espressif/tools/esp-clang/esp-20.1.1_20250829/esp-clang/lib/clang/20/include"
   ]
   Remove: [
+    "-mno-target-align",
     "-fno-shrink-wrap",
     "-fstrict-volatile-bitfields",
     "-fno-tree-switch-conversion",

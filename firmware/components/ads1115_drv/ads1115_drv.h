@@ -7,6 +7,7 @@
 #define ADS1115_DRV_H
 
 #include <stdint.h>             // for uint8_t
+#include <stdbool.h>            // for bool
 #include "driver/i2c_master.h"  // for i2c_master_dev_handle_t
 #include "esp_err.h"            // for esp_err_t
 
@@ -122,6 +123,22 @@ void ads1115_set_rate(ads1115_t *dev, ads1115_rate_t rate);
  * @return ESP_OK on success or I2C driver error code on failure
  */
 esp_err_t ads1115_start_conversion(ads1115_t *dev);
+
+/**
+ * @brief Read the configuration register
+ * @param[in]  dev    Pointer to the device structure
+ * @param[out] config Pointer to store the 16-bit configuration word
+ * @return ESP_OK on success or I2C driver error code on failure
+ */
+esp_err_t ads1115_read_config(ads1115_t *dev, uint16_t *config);
+
+/**
+ * @brief Check if the conversion is complete (polls OS bit)
+ * @param[in]  dev   Pointer to the device structure
+ * @param[out] ready Pointer to store the ready status (true if conversion complete)
+ * @return ESP_OK on success or I2C driver error code on failure
+ */
+esp_err_t ads1115_data_ready(ads1115_t *dev, bool *ready);
 
 /**
  * @brief Read raw 16-bit signed conversion value directly

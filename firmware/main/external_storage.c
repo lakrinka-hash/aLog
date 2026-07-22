@@ -1,6 +1,6 @@
 /**
- * @file system_storage.c
- * @brief Implementation of custom-buffered file operations and rotation
+ * @file external_storage.c
+ * @brief Implementation of custom-buffered SD card file operations and rotation
  */
 
 #include <string.h>
@@ -10,7 +10,7 @@
 #include <inttypes.h> // for PRIu32 specifier inside fprintf
 #include "esp_log.h"
 #include "system_time.h"
-#include "system_storage.h"
+#include "external_storage.h"
 
 #if __has_include("sdkconfig.h")
 #include "sdkconfig.h"
@@ -31,7 +31,7 @@ static const char *TAG = "sd_card";
  */
 #define SD_FLUSH_INTERVAL ((CONFIG_APP_SD_FLUSH_INTERVAL_SEC * 1000) / CONFIG_APP_LOG_TASK_DELAY_MS)
 
-esp_err_t sys_storage_init(sys_storage_t *dev, spi_host_device_t host, int cs, const char *mount_point)
+esp_err_t ext_storage_init(ext_storage_t *dev, spi_host_device_t host, int cs, const char *mount_point)
 {
     if (!dev || !mount_point) return ESP_ERR_INVALID_ARG;
 
@@ -51,7 +51,7 @@ esp_err_t sys_storage_init(sys_storage_t *dev, spi_host_device_t host, int cs, c
     return sd_spi_init(&dev->sdcard, host, cs, mount_point);
 }
 
-esp_err_t sys_storage_mount(sys_storage_t *dev)
+esp_err_t ext_storage_mount(ext_storage_t *dev)
 {
     if (!dev) return ESP_ERR_INVALID_ARG;
     if (dev->sdcard.mounted) return ESP_OK;
@@ -59,13 +59,12 @@ esp_err_t sys_storage_mount(sys_storage_t *dev)
     ESP_LOGI(TAG, "Calling sd_spi_drv to mount the SD card...");
 
     if (sd_spi_mount(&dev->sdcard) != ESP_OK) {
-        // Keep dev->logbuffer allocated to avoid heap fragmentation during hotplug reconnect cycles.
         return ESP_FAIL;
     }
     return ESP_OK;
 }
 
-esp_err_t sys_storage_unmount(sys_storage_t *dev)
+esp_err_t ext_storage_unmount(ext_storage_t *dev)
 {
     if (!dev) return ESP_ERR_INVALID_ARG;
     if (!dev->sdcard.mounted) return ESP_OK;
@@ -75,12 +74,6 @@ esp_err_t sys_storage_unmount(sys_storage_t *dev)
         fclose(dev->logfile);
         dev->logfile = NULL;
     }
-    /*
-    if (dev->logbuffer != NULL) {
-        free(dev->logbuffer);
-        dev->logbuffer = NULL;
-    }
-    */ // Note: logbuffer is kept to avoid heap fragmentation during reconnect cycles
     
     dev->current_date[0] = '\0';
     dev->timecount = 0;
@@ -89,11 +82,11 @@ esp_err_t sys_storage_unmount(sys_storage_t *dev)
     return sd_spi_unmount(&dev->sdcard);
 }
 
-void sys_storage_deinit(sys_storage_t *dev)
+void ext_storage_deinit(ext_storage_t *dev)
 {
     if (!dev) return;
     
-    sys_storage_unmount(dev);
+    ext_storage_unmount(dev);
     
     if (dev->logbuffer != NULL) {
         free(dev->logbuffer);
@@ -105,7 +98,7 @@ void sys_storage_deinit(sys_storage_t *dev)
 /**
  * @brief Internal helper to search next available unsynced log sequence index
  */
-static bool priv_FindFreeIndex(sys_storage_t *dev, char *out_path, size_t max_len)
+static bool priv_FindFreeIndex(ext_storage_t *dev, char *out_path, size_t max_len)
 {
     struct stat st;
     for (int i = 1; i <= CONFIG_APP_MAX_UNSYNCED_FILES; i++) {
@@ -120,20 +113,16 @@ static bool priv_FindFreeIndex(sys_storage_t *dev, char *out_path, size_t max_le
     return false;
 }
 
-esp_err_t sys_storage_write_line(sys_storage_t *dev, const char *line)
+esp_err_t ext_storage_write_line(ext_storage_t *dev, const char *line)
 {
     if (!dev || !line) return ESP_ERR_INVALID_ARG;
     if (!dev->sdcard.mounted) return ESP_ERR_INVALID_STATE;
 
-    // ****************** NEWLIB STREAM ERR CHECK (Sticky Errors) *****************
-
     if (dev->logfile && ferror(dev->logfile)) {
         ESP_LOGE(TAG, "Sticky stream error detected before write");
-        sys_storage_unmount(dev);
+        ext_storage_unmount(dev);
         return ESP_FAIL;
     }
-
-    // ******************************* CURRENT DATE *******************************
 
     char date_str[16] = {0};
     bool time_synced = sys_time_synced();
@@ -143,8 +132,6 @@ esp_err_t sys_storage_write_line(sys_storage_t *dev, const char *line)
     } else {
         strlcpy(date_str, "unsynced", sizeof(date_str));
     }
-
-    // ****************************** FILE ROTATION *******************************
 
     if (dev->logfile == NULL || strcmp(dev->current_date, date_str) != 0)
     {
@@ -157,12 +144,11 @@ esp_err_t sys_storage_write_line(sys_storage_t *dev, const char *line)
         char full_path[64] = {0};
         bool file_exist = false;
 
-        // creating a target file name
         if (time_synced) {
             snprintf(full_path, sizeof(full_path), "%s/log_%s.csv", dev->sdcard.mount_point, date_str);
         } else {
             if (!priv_FindFreeIndex(dev, full_path, sizeof(full_path))) {
-                sys_storage_unmount(dev);
+                ext_storage_unmount(dev);
                 return ESP_ERR_INVALID_STATE;
             }
         }
@@ -170,23 +156,20 @@ esp_err_t sys_storage_write_line(sys_storage_t *dev, const char *line)
         struct stat st;
         file_exist = (stat(full_path, &st) == 0);
 
-        // opening a file
         dev->logfile = fopen(full_path, "a");
         if (dev->logfile == NULL) {
             ESP_LOGE(TAG, "Failed to open target log file %s", full_path);
-            sys_storage_unmount(dev);
+            ext_storage_unmount(dev);
             return ESP_FAIL;
         }
 
-        // I/O buffer binding
         setvbuf(dev->logfile, dev->logbuffer, _IOFBF, CONFIG_APP_SD_LOG_BUFFER_SIZE);
         strlcpy(dev->current_date, date_str, sizeof(dev->current_date));
 
-        // file header
         if (!file_exist) {
             fprintf(dev->logfile, "Timestamp;Voltage;Voltage_Err;Current;Current_Err;Power;Relay1;Relay2\n");
             if (fflush(dev->logfile) != 0) {
-                sys_storage_unmount(dev);
+                ext_storage_unmount(dev);
                 return ESP_FAIL;
             }
             ESP_LOGI(TAG, "The new log file \"%s\" was created successfully", full_path);
@@ -196,38 +179,33 @@ esp_err_t sys_storage_write_line(sys_storage_t *dev, const char *line)
         dev->timecount = 0;
     }
 
-    // ****************************** DATA RECORDING ******************************
-
     uint64_t timestamp = sys_time_get_timestamp_us();
     uint32_t sec = (uint32_t)(timestamp / 1000000ULL);
     uint32_t usec = (uint32_t)(timestamp % 1000000ULL);
 
-    clearerr(dev->logfile);  // resetting old stream errors
+    clearerr(dev->logfile);
 
-    int str = fprintf(dev->logfile, "%" PRIu32 ".%06" PRIu32 ",%s\n", sec, usec, line);
+    int str = fprintf(dev->logfile, "%" PRIu32 ".%06" PRIu32 ";%s\n", sec, usec, line);
 
-    // Checking fprintf and stream err flag
     if (str < 0 || ferror(dev->logfile)) {
         ESP_LOGE(TAG, "Write transaction or stream fail detected inside fprintf!");
-        sys_storage_unmount(dev);
+        ext_storage_unmount(dev);
         return ESP_FAIL;
     }
-
-    // ************************* PERIODIC (fflush/fsync) **************************
 
     dev->timecount++;
     if (dev->timecount >= SD_FLUSH_INTERVAL) 
     {
         if (fflush(dev->logfile) != 0 || ferror(dev->logfile)) {
             ESP_LOGE(TAG, "Buffered fflush failed!");
-            sys_storage_unmount(dev);
+            ext_storage_unmount(dev);
             return ESP_FAIL;
         }
         int fd = fileno(dev->logfile);
         if (fd >= 0) {
             if (fsync(fd) != 0) {
                 ESP_LOGE(TAG, "Physical fsync failed! Hardware layer dead.");
-                sys_storage_unmount(dev);
+                ext_storage_unmount(dev);
                 return ESP_FAIL;
             }
         }

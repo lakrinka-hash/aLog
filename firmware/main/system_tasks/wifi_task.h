@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 #ifndef CONFIG_APP_WIFI_STA_SSID
-#define CONFIG_APP_WIFI_STA_SSID       "hp840"
+#define CONFIG_APP_WIFI_STA_SSID       "hp840g3"
 #endif
 
 #ifndef CONFIG_APP_WIFI_STA_PASS

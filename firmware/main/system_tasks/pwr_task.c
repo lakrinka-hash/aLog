@@ -25,7 +25,7 @@ void pwr_task(void *pvParameters)
         web_server_stop();
         wifi_app_stop();
 
-        // Freezing Wi-Fi, LCD and ADC tasks
+        // Freezing Wi-Fi, LCD, ADC, UDP and time tasks
         if (system_task.wifi_task_handle) {
             vTaskSuspend(system_task.wifi_task_handle);
             ESP_LOGW("pwr_task", "Wi-Fi task suspended.");
@@ -37,6 +37,14 @@ void pwr_task(void *pvParameters)
         if (system_task.adc_task_handle) {
             vTaskSuspend(system_task.adc_task_handle);
             ESP_LOGW("pwr_task", "ADC task suspended.");
+        }
+        if (system_task.udp_task_handle) {
+            vTaskSuspend(system_task.udp_task_handle);
+            ESP_LOGW("pwr_task", "UDP task suspended.");
+        }
+        if (system_task.time_task_handle) {
+            vTaskSuspend(system_task.time_task_handle);
+            ESP_LOGW("pwr_task", "Time task suspended.");
         }
 
         // Set the max priority for a log task

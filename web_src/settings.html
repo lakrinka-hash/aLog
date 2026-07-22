@@ -1,0 +1,148 @@
+<div id="settings-tab" class="tab-content">
+    <div class="settings-layout">
+        <!-- Sidebar -->
+        <div class="settings-sidebar">
+            <button class="settings-nav-btn active" onclick="switchSettingsSection('udp')">
+                <span>📡</span> UDP Telemetry
+            </button>
+            <button class="settings-nav-btn" onclick="switchSettingsSection('wifi')">
+                <span>📶</span> Wi-Fi Access Points
+            </button>
+            <button class="settings-nav-btn" onclick="switchSettingsSection('adc')">
+                <span>📈</span> ADC Calibration
+            </button>
+            <button class="settings-nav-btn" onclick="switchSettingsSection('system')">
+                <span>⚙️</span> Device & System
+            </button>
+        </div>
+
+        <!-- Active Panel Content -->
+        <div class="settings-panel">
+            <div class="alert" id="settings-alert"></div>
+
+            <!-- UDP Telemetry Settings Section -->
+            <div id="sect-udp" class="settings-section active">
+                <h3 style="margin-top:0;">Telemetry UDP Settings</h3>
+                <p class="section-desc">
+                    Configure the destination IP and port where telemetry data (UDP packets) should be sent.
+                </p>
+                
+                <form id="settings-form" onsubmit="saveSettings(event)">
+                    <div class="form-group">
+                        <label for="udp_ip">UDP Destination IP Address</label>
+                        <input type="text" id="udp_ip" required placeholder="e.g. 192.168.1.100" pattern="^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$" title="Please enter a valid IPv4 address">
+                    </div>
+                    <div class="form-group">
+                        <label for="udp_port">UDP Destination Port</label>
+                        <input type="number" id="udp_port" required min="1" max="65535" placeholder="e.g. 12345">
+                    </div>
+                    <button type="submit" class="btn">Save UDP Settings</button>
+                </form>
+            </div>
+
+            <!-- Wi-Fi Settings Section -->
+            <div id="sect-wifi" class="settings-section">
+                <h3 style="margin-top:0;">Wi-Fi Networks</h3>
+                <p class="section-desc">
+                    Manage multiple stored Wi-Fi access points (maximum 5). The device will automatically rotate and connect to the next available network.
+                </p>
+                
+                <div style="background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+                    <h4 style="margin: 0 0 15px 0; font-size: 14px; font-weight: 600; color: #4a5568;">Stored Access Points</h4>
+                    <div id="wifi-list-container">
+                        <p style="font-size:13px; color:#718096; text-align:center; padding: 10px; margin: 0;">Loading stored networks...</p>
+                    </div>
+                </div>
+
+                <div style="background: #fafbfd; border: 1px dashed #cbd5e0; border-radius: 8px; padding: 20px;">
+                    <h4 style="margin: 0 0 15px 0; font-size: 14px; font-weight: 600; color: #4a5568;">+ Add or Update Access Point</h4>
+                    <form id="wifi-add-form" onsubmit="addWifiNetwork(event)">
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label for="wifi_ssid" style="font-size:12px; margin-bottom: 4px;">Network Name (SSID)</label>
+                            <input type="text" id="wifi_ssid" required placeholder="e.g. MyHomeWiFi" maxlength="31" style="padding: 8px 12px; font-size: 13px;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label for="wifi_pass" style="font-size:12px; margin-bottom: 4px;">Security Key (Password)</label>
+                            <input type="password" id="wifi_pass" placeholder="Leave empty if open network" maxlength="63" style="padding: 8px 12px; font-size: 13px;">
+                        </div>
+                        <button type="submit" class="btn" style="padding: 10px 16px; font-size:13px;">Save & Connect</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ADC Calibration Section -->
+            <div id="sect-adc" class="settings-section">
+                <h3 style="margin-top:0;">ADC Calibration</h3>
+                <p class="section-desc">
+                    Adjust offset values and gain multipliers for precise ADS1115 analog measurements.
+                </p>
+                
+                <form id="adc-calib-form" onsubmit="saveAdcCalibration(event)">
+                    <div style="background: #fafbfd; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #4a5568;">Voltage Channel (y = k * x + b)</h4>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="voltage_coef">Multiplier (k)</label>
+                            <input type="number" id="voltage_coef" step="0.0001" min="0" required placeholder="1.0000" style="padding: 8px 12px; font-size: 13px;">
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label for="voltage_offset">Offset (b) [V]</label>
+                            <input type="number" id="voltage_offset" step="0.0001" required placeholder="0.0000" style="padding: 8px 12px; font-size: 13px;">
+                        </div>
+                    </div>
+
+                    <div style="background: #fafbfd; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #4a5568;">Current Channel (y = k * x + b)</h4>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="current_coef">Multiplier (k)</label>
+                            <input type="number" id="current_coef" step="0.0001" min="0" required placeholder="1.0000" style="padding: 8px 12px; font-size: 13px;">
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label for="current_offset">Offset (b) [A]</label>
+                            <input type="number" id="current_offset" step="0.0001" required placeholder="0.0000" style="padding: 8px 12px; font-size: 13px;">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">Save Calibration Settings</button>
+                </form>
+            </div>
+
+            <!-- Device Info & System Section -->
+            <div id="sect-system" class="settings-section">
+                <h3 style="margin-top:0;">Device Info & System</h3>
+                <p class="section-desc">
+                    Diagnostic telemetry metrics and manual hardware operations.
+                </p>
+                
+                <div class="placeholder-box" style="padding: 15px 20px; background: white; border: 1px solid var(--border-color); border-radius: 8px;">
+                    <div class="system-stat-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #edf2f7;">
+                        <strong style="color: #4a5568;">Firmware Version:</strong>
+                        <span style="font-family: monospace; font-weight: 600; color: #2d3748;">v1.3.0-calib</span>
+                    </div>
+                    <div class="system-stat-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #edf2f7;">
+                        <strong style="color: #4a5568;">ESP-IDF Core Version:</strong>
+                        <span id="sys-idf-ver" style="font-family: monospace; color: #2d3748;">Loading...</span>
+                    </div>
+                    <div class="system-stat-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #edf2f7;">
+                        <strong style="color: #4a5568;">SoC Target:</strong>
+                        <span id="sys-chip" style="font-weight: 500; color: #2d3748;">Loading...</span>
+                    </div>
+                    <div class="system-stat-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #edf2f7;">
+                        <strong style="color: #4a5568;">Active Free Heap:</strong>
+                        <span id="sys-heap" style="font-family: monospace; color: #2d3748;">Loading...</span>
+                    </div>
+                    <div class="system-stat-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #edf2f7;">
+                        <strong style="color: #4a5568;">Local Flash Storage (SPIFFS):</strong>
+                        <span id="sys-spiffs" style="font-family: monospace; color: #2d3748;">Loading...</span>
+                    </div>
+                    <div class="system-stat-row" style="display: flex; justify-content: space-between; padding: 10px 0;">
+                        <strong style="color: #4a5568;">Local File System:</strong>
+                        <span style="color: #2d3748;">SPIFFS (mounted on /storage)</span>
+                    </div>
+                    <div style="margin-top:25px; display:flex; gap:12px;">
+                        <button class="btn" style="background-color: var(--danger-color); font-weight: 600;" onclick="triggerFactoryReset()">Factory Reset</button>
+                        <button class="btn btn-secondary" style="font-weight: 600; border: 1px solid #cbd5e0;" onclick="triggerReboot()">Reboot SoC</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

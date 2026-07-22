@@ -1,0 +1,38 @@
+<div id="logs-tab" class="tab-content">
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h2 style="margin:0; font-size:18px; font-weight:600;">SD Card Log Files</h2>
+            <button class="btn btn-secondary" onclick="refreshLogFiles()" style="width:auto; padding:6px 12px; font-size:12px; display:flex; align-items:center; gap:6px;">
+                <span>🔄</span> Refresh
+            </button>
+        </div>
+        <p class="section-desc" style="margin-bottom:20px;">
+            Manage telemetry logs stored on the SD Card. Files are daily-rotated or unsynced index buffers. You can download them to your computer or delete them to free up space.
+        </p>
+
+        <div class="alert" id="logs-alert"></div>
+
+        <div id="logs-unmounted-state" style="display:none; text-align:center; padding:30px 20px; background:#f7fafc; border:1px dashed #cbd5e0; border-radius:8px;">
+            <span style="font-size:32px; display:block; margin-bottom:10px;">💾</span>
+            <strong style="color:#4a5568; display:block; margin-bottom:6px;">SD Card Not Mounted</strong>
+            <span style="font-size:13px; color:#718096; display:block; margin-bottom:15px;">Please insert an SD card into the device and click Refresh.</span>
+        </div>
+
+        <div id="logs-table-container">
+            <table class="mock-table" id="logs-table">
+                <thead>
+                    <tr>
+                        <th style="width:55%;">File Name</th>
+                        <th style="width:20%;">Size</th>
+                        <th style="width:25%; text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="logs-table-body">
+                    <tr>
+                        <td colspan="3" style="text-align:center; color:#718096; padding:20px;">Loading files...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

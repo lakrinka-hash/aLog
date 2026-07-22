@@ -8,7 +8,7 @@
 #include "driver/i2c_master.h"
 #include "ads1115_drv.h"
 
-static const char *TAG = "ads1115_drv";
+static const char *TAG = "ads1115";
 
 #define ADS1115_CONVERSION_REG    0x00  // Conversion register
 #define ADS1115_CONFIG_REG        0x01  // Configuration register
@@ -94,6 +94,7 @@ esp_err_t ads1115_attach(i2c_master_bus_handle_t bus, ads1115_t *dev, uint8_t ad
 /******************** Set Mode ********************/
 void ads1115_set_mode(ads1115_t *dev, ads1115_mode_t mode)
 {
+    if (!dev) return;
     dev->mode = mode;
     ESP_LOGI(TAG, "Device (handle=%p) mode changed to %s",
             (void*)dev->handle,
@@ -103,6 +104,7 @@ void ads1115_set_mode(ads1115_t *dev, ads1115_mode_t mode)
 /****************** Set Channel ******************/
 esp_err_t ads1115_set_channel(ads1115_t *dev, uint8_t channel)
 {
+    if (!dev) return ESP_ERR_INVALID_ARG;
     if (channel > 3) return ESP_ERR_INVALID_ARG;
     dev->channel = channel;
     return ESP_OK;
@@ -111,6 +113,7 @@ esp_err_t ads1115_set_channel(ads1115_t *dev, uint8_t channel)
 /******************** Set PGA ********************/
 void ads1115_set_pga(ads1115_t *dev, ads1115_pga_t pga)
 {
+    if (!dev) return;
     float range = pga_to_voltage(pga);
     if (range < 0.0f) {
         ESP_LOGW(TAG, "Device (handle=%p): Invalid PGA setting 0x%04X",
@@ -128,6 +131,7 @@ void ads1115_set_pga(ads1115_t *dev, ads1115_pga_t pga)
 /******************** Set Rate ********************/
 void ads1115_set_rate(ads1115_t *dev, ads1115_rate_t rate)
 {
+    if (!dev) return;
     uint16_t sps = rate_to_sps(rate);
     if (sps == 0) {
         ESP_LOGW(TAG, "Device (handle=%p): Invalid data rate setting 0x%04X",
@@ -145,6 +149,7 @@ void ads1115_set_rate(ads1115_t *dev, ads1115_rate_t rate)
 /**************** Start Conversion ****************/
 esp_err_t ads1115_start_conversion(ads1115_t *dev)
 {
+    if (!dev) return ESP_ERR_INVALID_ARG;
     uint16_t config_word = 0x8000                        // Operational status
                          | ((0x04 + dev->channel) << 12) // MUX: AIN0..AIN3 vs GND
                          | dev->pga                      // Gain (PGA)
@@ -160,10 +165,36 @@ esp_err_t ads1115_start_conversion(ads1115_t *dev)
     return i2c_master_transmit(dev->handle, config_buf, sizeof(config_buf), I2C_TIMEOUT_MS);
 }
 
+/****************** Read Config *******************/
+esp_err_t ads1115_read_config(ads1115_t *dev, uint16_t *config)
+{
+    if (!dev || !config) return ESP_ERR_INVALID_ARG;
+    uint8_t reg = ADS1115_CONFIG_REG;
+    uint8_t data[2] = {0};
+    esp_err_t ret = i2c_master_transmit_receive(dev->handle, &reg, 1, data, 2, I2C_TIMEOUT_MS);
+    if (ret == ESP_OK) {
+        *config = (uint16_t)((data[0] << 8) | data[1]);
+    }
+    return ret;
+}
+
+/************* Data Ready Status Check ***********/
+esp_err_t ads1115_data_ready(ads1115_t *dev, bool *ready)
+{
+    if (!dev || !ready) return ESP_ERR_INVALID_ARG;
+    uint16_t config = 0;
+    esp_err_t ret = ads1115_read_config(dev, &config);
+    if (ret == ESP_OK) {
+        // Bit 15 is OS bit: 1 means conversion is complete
+        *ready = (config & 0x8000) ? true : false;
+    }
+    return ret;
+}
+
 /******************** Read Raw ********************/
 esp_err_t ads1115_read_raw(ads1115_t *dev, int16_t *value)
 {
-    if (!value) return ESP_ERR_INVALID_ARG;
+    if (!dev || !value) return ESP_ERR_INVALID_ARG;
 
     uint8_t reg = ADS1115_CONVERSION_REG;
     uint8_t data[2] = {0};
@@ -181,7 +212,7 @@ esp_err_t ads1115_read_raw(ads1115_t *dev, int16_t *value)
 /**************** Calculate value ****************/
 esp_err_t ads1115_get_normalized(ads1115_t *dev, float *value)
 {
-    if (!value) return ESP_ERR_INVALID_ARG;
+    if (!dev || !value) return ESP_ERR_INVALID_ARG;
 
     int16_t raw_value = 0;
     esp_err_t ret = ads1115_read_raw(dev, &raw_value);
@@ -193,7 +224,7 @@ esp_err_t ads1115_get_normalized(ads1115_t *dev, float *value)
 /**************** Calculate Voltage ****************/
 esp_err_t ads1115_get_voltage(ads1115_t *dev, float *voltage)
 {
-    if (!voltage) return ESP_ERR_INVALID_ARG;
+    if (!dev || !voltage) return ESP_ERR_INVALID_ARG;
     float norm = 0.0f;
     esp_err_t ret = ads1115_get_normalized(dev, &norm);
     if (ret != ESP_OK) return ret;

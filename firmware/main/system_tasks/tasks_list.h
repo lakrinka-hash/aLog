@@ -25,6 +25,7 @@ typedef struct
     TaskHandle_t pwr_task_handle;   ///< Handle for the power loss monitoring task
     TaskHandle_t udp_task_handle;   ///< 
     TaskHandle_t wifi_task_handle;  ///< Handle for the Wi-Fi management task
+    TaskHandle_t time_task_handle;  ///< Handle for the time management task
 
 } system_task_t;
 

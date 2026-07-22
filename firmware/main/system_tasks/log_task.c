@@ -51,10 +51,10 @@ void log_task(void *pvParameters)
         {
             case STORAGE_STATE_CONNECT:
             {
-                ret = sys_storage_mount(args->storage);
+                ret = ext_storage_mount(args->storage);
                 if (ret != ESP_OK) {
                     sys_state_set_sd(true, false, 0, 0);
-                    sys_storage_unmount(args->storage);
+                    ext_storage_unmount(args->storage);
                     storage_state = STORAGE_STATE_FAIL;
                     break;
                 }
@@ -71,7 +71,7 @@ void log_task(void *pvParameters)
                     ret = sd_spi_get_space(&(args->storage->sdcard), &total_mb, &free_mb);
                     if (ret != ESP_OK) {
                         sys_state_set_sd(true, false, 0, 0);
-                        sys_storage_unmount(args->storage);
+                        ext_storage_unmount(args->storage);
                         storage_state = STORAGE_STATE_FAIL;
                         break;
                     }
@@ -93,10 +93,10 @@ void log_task(void *pvParameters)
 
             case STORAGE_STATE_OK:
             {
-                ret = sys_storage_write_line(args->storage, line);
+                ret = ext_storage_write_line(args->storage, line);
                 if (ret != ESP_OK) {
                     ESP_LOGE("log_task", "Unable to send string to stream buffer");
-                    sys_storage_unmount(args->storage);
+                    ext_storage_unmount(args->storage);
                     storage_state = STORAGE_STATE_FAIL;
                     break;
                 }
@@ -121,7 +121,7 @@ void log_task(void *pvParameters)
                 ret = sd_spi_get_space(&(args->storage->sdcard), &total_mff, &free_mff);
                 if (ret != ESP_OK) {
                     sys_state_set_sd(true, false, 0, 0);
-                    sys_storage_unmount(args->storage);
+                    ext_storage_unmount(args->storage);
                     storage_state = STORAGE_STATE_FAIL;
                     break;
                 }
@@ -139,13 +139,30 @@ void log_task(void *pvParameters)
         // Wait for next cycle, or wake up instantly on emergency interrupt trigger
         if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(CONFIG_APP_LOG_TASK_DELAY_MS)) == pdTRUE)
         {
+            ESP_LOGW("log_task", "Emergency shutdown notification received in logTask!");
+            
+            // Record one final emergency log entry with the last available sensor readings
+            sys_state_get_adc(&adc_data);
+            sys_state_get_relays(&relays);
+            float power_val = 0.0f;
+            if (!adc_data.voltage_err && !adc_data.current_err) {
+                power_val = adc_data.voltage * adc_data.current;
+            }
+            snprintf(line, sizeof(line), "%.4f;%d;%.4f;%d;%.4f;%d;%d",
+                    adc_data.voltage, adc_data.voltage_err ? 1 : 0,
+                    adc_data.current, adc_data.current_err ? 1 : 0,
+                    power_val, relays.relay1 ? 1 : 0, relays.relay2 ? 1 : 0);
+
+            if (storage_state == STORAGE_STATE_OK || storage_state == STORAGE_STATE_CHECK) {
+                ext_storage_write_line(args->storage, line);
+            }
+
             if (args->storage->logfile != NULL) {
-                sys_storage_unmount(args->storage);
+                ext_storage_unmount(args->storage);
                 ESP_LOGI("log_task", "Data saved successfully");
             }
             ESP_LOGW("log_task", "Terminating logTask");
             vTaskDelete(NULL);
         }
-        vTaskDelay(pdMS_TO_TICKS(CONFIG_APP_LOG_TASK_DELAY_MS));
     }
 }

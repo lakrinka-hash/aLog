@@ -15,6 +15,7 @@ typedef struct {
     sys_state_relays_t relays;
     sys_state_sd_t     sd;
     sys_state_wifi_t   wifi; 
+    sys_state_time_t   time;
 } system_state_t;
 
 static system_state_t system_state = {0};
@@ -27,7 +28,6 @@ static void broadcast_state_change(void)
         xTaskNotifyGive(system_task.lcd_task_handle);
     }
 }
-
 
 void sys_state_init(void)
 {
@@ -44,6 +44,9 @@ void sys_state_init(void)
 
     system_state.wifi.state = WIFI_STATE_DISCONNECTED;
     strcpy(system_state.wifi.ip_addr, "0.0.0.0");
+
+    system_state.time.source = TIME_SRC_UNSYNC;
+    system_state.time.synced = false;
 }
 
 /************************ SETTERS (for data providers) ************************/
@@ -102,6 +105,16 @@ void sys_state_set_wifi(wifi_app_state_t state, const char *ip_addr)
     }
 }
 
+void sys_state_set_time(sys_time_source_t source, bool synced)
+{
+    if (store_mutex && xSemaphoreTake(store_mutex, portMAX_DELAY) == pdTRUE) {
+        system_state.time.source = source;
+        system_state.time.synced = synced;
+        xSemaphoreGive(store_mutex);
+        broadcast_state_change();
+    }
+}
+
 /**************************  GETTERS (for consumers) **************************/
 
 void sys_state_get_adc(sys_state_adc_t *dst)
@@ -132,6 +145,14 @@ void sys_state_get_wifi(sys_state_wifi_t *dst)
 {
     if (dst && store_mutex && xSemaphoreTake(store_mutex, portMAX_DELAY) == pdTRUE) {
         *dst = system_state.wifi;
+        xSemaphoreGive(store_mutex);
+    }
+}
+
+void sys_state_get_time(sys_state_time_t *dst)
+{
+    if (dst && store_mutex && xSemaphoreTake(store_mutex, portMAX_DELAY) == pdTRUE) {
+        *dst = system_state.time;
         xSemaphoreGive(store_mutex);
     }
 }

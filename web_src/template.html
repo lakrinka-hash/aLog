@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aLog Project Web Console</title>
+    <link class="favicon" rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+    <style>
+        /* {{STYLE_CSS}} */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>aLog Telemetry</h1>
+                <div style="font-size:13px;color:#718096;margin-top:4px;" id="sys-time">Syncing time...</div>
+            </div>
+            <span class="status-badge" id="wifi-status">ONLINE</span>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+            <button class="tab-btn" onclick="switchTab('logs')">Saved Logs</button>
+            <button class="tab-btn" onclick="switchTab('settings')">Settings</button>
+        </div>
+        
+        <!-- Dashboard Tab -->
+        <!-- {{DASHBOARD_HTML}} -->
+
+        <!-- Logs Tab -->
+        <!-- {{LOGS_HTML}} -->
+
+        <!-- Settings Tab -->
+        <!-- {{SETTINGS_HTML}} -->
+
+        <div class="footer">
+            aLog System Device Dashboard &bull; Serving from internal Flash &bull; Uptime: <span id="uptime">0</span>s
+        </div>
+    </div>
+
+    <script>
+        // {{SCRIPT_JS}}
+    </script>
+</body>
+</html>

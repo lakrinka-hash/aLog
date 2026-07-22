@@ -42,6 +42,15 @@ uint64_t sys_time_get_timestamp_us(void);
  */
 bool sys_time_synced(void);
 
+/**
+ * @brief Register a DS1307 RTC device to synchronize with system time.
+ * @note If system time is unsynchronized, it will be loaded from the RTC.
+ *       If system time gets synchronized via NTP, the RTC will be updated automatically.
+ * 
+ * @param[in] rtc_dev Pointer to the initialized DS1307 device structure.
+ */
+void sys_time_register_rtc(const void *rtc_dev);
+
 #ifdef __cplusplus
 }
 #endif

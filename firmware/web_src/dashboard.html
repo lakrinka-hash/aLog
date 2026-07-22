@@ -1,0 +1,42 @@
+<div id="dashboard-tab" class="tab-content active">
+    <div class="grid">
+        <div class="card">
+            <h3>Voltage</h3>
+            <div class="value" id="val-voltage">--<span class="unit">V</span></div>
+        </div>
+        <div class="card">
+            <h3>Current</h3>
+            <div class="value" id="val-current">--<span class="unit">A</span></div>
+        </div>
+        <div class="card">
+            <h3>Power</h3>
+            <div class="value" id="val-power">--<span class="unit">W</span></div>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h3>SD Card Storage</h3>
+            <div class="value" style="font-size:18px; line-height: 1.4;" id="val-sd">--</div>
+        </div>
+        <div class="card">
+            <h3>Relay Actuators</h3>
+            <div class="controls">
+                <div class="control-row">
+                    <span>Relay 1 (GPIO 2)</span>
+                    <label class="switch">
+                        <input type="checkbox" id="relay1" onchange="toggleRelay(1, this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="control-row">
+                    <span>Relay 2 (GPIO 3)</span>
+                    <label class="switch">
+                        <input type="checkbox" id="relay2" onchange="toggleRelay(2, this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

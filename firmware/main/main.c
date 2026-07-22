@@ -7,16 +7,17 @@
 #include "driver/gpio.h"        // for gpio_config_t
 #include "driver/i2c_master.h"  // for i2c_new_master_bus, i2c_master_bus_config_t
 #include "driver/spi_common.h"  // for spi_bus_initialize, spi_bus_config_t
-#include "esp_timer.h"
 #include "nvs_flash.h"
-
+#include "esp_timer.h"
 
 #include "sdkconfig.h"
-#include "system_storage.h"
+#include "internal_storage.h"
+#include "external_storage.h"
 #include "system_state.h"
 #include "system_time.h"
 #include "ssd1306_drv.h"
 #include "ads1115_drv.h"
+#include "ds1307_drv.h"
 #include "gfx.h"
 #include "fonts.h"
 #include "tasks_list.h"
@@ -24,10 +25,12 @@
 #include "lcd_task.h"
 #include "log_task.h"
 #include "pwr_task.h"
+#include "time_task.h"
 #include "udp_task.h"
 #include "wifi_task.h"
 #include "wifi_app.h"
-#include "main.h"      // IWYU pragma: keep
+#include "app_config.h"
+#include "main.h" 
 
 #define APP_DEBUG_STACK_MONITOR    0
 
@@ -35,16 +38,19 @@ system_task_t system_task = {0};
 
 static i2c_master_bus_handle_t i2c_bus_handle;
 static ads1115_t ads1115;
+static ds1307_t ds1307;
 static ssd1306_t ssd1306;
-static sys_storage_t sdcard;
+static ext_storage_t sdcard;
 static gfx_t canvas;
 
 static esp_timer_handle_t led_timer = NULL;
-static volatile wifi_app_state_t wifi_state = WIFI_STATE_DISCONNECTED;
+static volatile wifi_app_state_t s_current_wifi_state = WIFI_STATE_DISCONNECTED;
 static volatile bool led_level = false;
 
 static void wifi_state_changed_cb(wifi_app_state_t new_state) {
-    wifi_state = new_state;
+    ESP_LOGI("main", "Wi-Fi state changed to: %d", new_state);
+    s_current_wifi_state = new_state;
+
     char ip_buffer[16] = "0.0.0.0";
     if (new_state == WIFI_STATE_CONNECTED) {
         wifi_app_get_ip(ip_buffer, sizeof(ip_buffer));
@@ -57,27 +63,29 @@ static void wifi_state_changed_cb(wifi_app_state_t new_state) {
 }
 
 static void led_timer_callback(void *arg) {
-    uint64_t period_us = 1000000; // Default (disconnected/slow)
-    sys_state_wifi_t locall_wifi_state;
-    sys_state_get_wifi(&locall_wifi_state);
+    uint64_t next_period_us = 1000000; // Default (disconnected/slow)
+    sys_state_wifi_t wifi_state;
+    sys_state_get_wifi(&wifi_state);
     
-    if (locall_wifi_state.state == WIFI_STATE_CONNECTED) {
+    if (wifi_state.state == WIFI_STATE_CONNECTED) {
+        // Connected: slow blink (1s period)
         led_level = !led_level;
-        period_us = 1000000; 
-    } else if (locall_wifi_state.state == WIFI_STATE_CONNECTING) {
+        next_period_us = 1000000; 
+    } else if (wifi_state.state == WIFI_STATE_CONNECTING || wifi_state.state == WIFI_STATE_RECONNECTING) {
+        // Connecting or Reconnecting: fast blink (100ms period)
         led_level = !led_level;
-        period_us = 100000;
+        next_period_us = 100000;
     } else {
+        // Disconnected (OFF)
         led_level = false;
-        period_us = 1000000;
+        next_period_us = 1000000; // Just check back in 1s
     }
 
     gpio_set_level(CONFIG_APP_LED_PIN, led_level ? 0 : 1);
     
     esp_timer_stop(led_timer);
-    esp_timer_start_once(led_timer, period_us);
+    esp_timer_start_once(led_timer, next_period_us);
 }
-
 
 static void led_init(void) {
     const esp_timer_create_args_t timer_args = {
@@ -177,7 +185,6 @@ static void gpios_init(void)
     };
     gpio_config(&io_conf);
     
-    //gpio_set_level(CONFIG_APP_LED_PIN, 1);
     gpio_set_level(CONFIG_APP_RLY1_PIN, 0);
     gpio_set_level(CONFIG_APP_RLY2_PIN, 0);
     sys_state_set_relays(false, false);
@@ -195,6 +202,7 @@ static void sys_mon_task(void *pvParameters)
         uint32_t lcd_stack = uxTaskGetStackHighWaterMark(system_task.lcd_task_handle);
         uint32_t log_stack = uxTaskGetStackHighWaterMark(system_task.log_task_handle); 
         uint32_t pwr_stack = uxTaskGetStackHighWaterMark(system_task.pwr_task_handle);
+        uint32_t time_stack = uxTaskGetStackHighWaterMark(system_task.time_task_handle);
         uint32_t udp_stack = uxTaskGetStackHighWaterMark(system_task.udp_task_handle);
         uint32_t wifi_stack = uxTaskGetStackHighWaterMark(system_task.wifi_task_handle);
         uint32_t mon_stack = uxTaskGetStackHighWaterMark(NULL);
@@ -204,6 +212,7 @@ static void sys_mon_task(void *pvParameters)
         ESP_LOGI("STACK_MON", "lcd_task:  %" PRIu32 " B", lcd_stack);
         ESP_LOGI("STACK_MON", "log_task:  %" PRIu32 " B", log_stack);
         ESP_LOGI("STACK_MON", "pwr_task:  %" PRIu32 " B", pwr_stack);
+        ESP_LOGI("STACK_MON", "time_task: %" PRIu32 " B", time_stack);
         ESP_LOGI("STACK_MON", "udp_task:  %" PRIu32 " B", udp_stack);
         ESP_LOGI("STACK_MON", "wifi_task: %" PRIu32 " B", wifi_stack);
         ESP_LOGI("STACK_MON", "mon_task:  %" PRIu32 " B", mon_stack);
@@ -237,6 +246,18 @@ void app_main(void)
     }
     ESP_ERROR_CHECK(err);
 
+    // Initialize Application Configuration Manager
+    err = app_config_init();
+    if (err != ESP_OK) {
+        ESP_LOGE("app_main", "Failed to initialize Application Configuration Manager: %s", esp_err_to_name(err));
+    }
+
+    // Initialize Local Storage (SPIFFS)
+    err = int_storage_mount();
+    if (err != ESP_OK) {
+        ESP_LOGE("app_main", "Failed to initialize and mount local SPIFFS storage!");
+    }
+
     err = wifi_app_init();
     if (err != ESP_OK) {
         ESP_LOGE("app_main", "Failed to initialize Wi-Fi component stack");
@@ -246,7 +267,7 @@ void app_main(void)
             wifi_task,
             "wifi_task",
             CONFIG_APP_WIFI_TASK_STACK,
-            NULL,
+            (void *)&sdcard,
             3,
             &system_task.wifi_task_handle
         );
@@ -295,11 +316,28 @@ void app_main(void)
                 &system_task.adc_task_handle  // Descriptor
             );
         }
+
+        // Attach and register DS1307 RTC
+        err = ds1307_attach(i2c_bus_handle, &ds1307, DS1307_I2C_ADDR);
+        if (err == ESP_OK) {
+            sys_time_register_rtc(&ds1307);
+
+            static time_task_args_t time_ctx;
+            time_ctx.rtc = &ds1307;
+            xTaskCreate(
+                time_task,
+                "time_task",
+                CONFIG_APP_TIME_TASK_STACK,
+                (void *)&time_ctx,
+                3,
+                &system_task.time_task_handle
+            );
+        }
     }
 
     err = spi_bus_init();
     if (err == ESP_OK) {
-        err = sys_storage_init(&sdcard, CONFIG_APP_SPI_HOST, CONFIG_APP_SD_CS_PIN, "/sdcard");
+        err = ext_storage_init(&sdcard, CONFIG_APP_SPI_HOST, CONFIG_APP_SD_CS_PIN, "/sdcard");
         if (err == ESP_OK) {
             static log_task_args_t log_ctx;
             log_ctx.storage = &sdcard;
@@ -323,7 +361,7 @@ void app_main(void)
     }
 
     #if APP_DEBUG_STACK_MONITOR
-    xTaskCreate(sys_mon_task, "sys_mon_task", 1536, NULL, 1, NULL);
+    xTaskCreate(sys_mon_task, "sys_mon_task", 2048, NULL, 1, NULL);
     #endif
 
     ESP_LOGI("app_main", "Application initialization complete. main_task exiting...");

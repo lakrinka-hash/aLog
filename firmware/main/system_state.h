@@ -59,6 +59,25 @@ typedef struct {
     char ip_addr[16];
 } sys_state_wifi_t;
 
+/**
+ * @enum sys_time_source_t
+ * @brief Source of the system clock's current synchronization
+ */
+typedef enum {
+    TIME_SRC_UNSYNC = 0, ///< System time is unsynchronized (default 1970/2020 epoch)
+    TIME_SRC_RTC,        ///< System time was restored from DS1307 RTC
+    TIME_SRC_SNTP        ///< System time was synchronized with network SNTP servers
+} sys_time_source_t;
+
+/**
+ * @struct sys_state_time_t
+ * @brief Time sync state container
+ */
+typedef struct {
+    sys_time_source_t source; ///< Source of truth for system time
+    bool synced;              ///< Time synchronization flag
+} sys_state_time_t;
+
 /******************* Module Management ********************/
 
 /**
@@ -101,6 +120,13 @@ void sys_state_set_relays(bool r1, bool r2);
  */
 void sys_state_set_wifi(wifi_app_state_t state, const char *ip_addr);
 
+/**
+ * @brief Atomically update system time synchronization state
+ * @param[in] source Current time source of truth
+ * @param[in] synced True if system clock is synchronized (loaded from RTC or SNTP)
+ */
+void sys_state_set_time(sys_time_source_t source, bool synced);
+
 /**************** GETTERS (for consumers) *****************/
 
 /**
@@ -126,6 +152,12 @@ void sys_state_get_sd(sys_state_sd_t *dst);
  * @param[out] dst Pointer to the destination target structure
  */
 void sys_state_get_wifi(sys_state_wifi_t *dst);
+
+/**
+ * @brief Thread-safely copy the current system time sync state block
+ * @param[out] dst Pointer to the destination target structure
+ */
+void sys_state_get_time(sys_state_time_t *dst);
 
 #ifdef __cplusplus
 }

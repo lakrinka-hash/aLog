@@ -6,7 +6,7 @@
 #ifndef LOG_TASK_H
 #define LOG_TASK_H
 
-#include "system_storage.h"
+#include "external_storage.h"
 
 #if __has_include("sdkconfig.h")
 #include "sdkconfig.h"
@@ -25,7 +25,7 @@ extern "C" {
  * @brief Arguments passed to the log_task on creation
  */
 typedef struct {
-    sys_storage_t *storage;  ///< 
+    ext_storage_t *storage;  ///< 
 } log_task_args_t;
 
 /**

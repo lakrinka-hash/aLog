@@ -258,13 +258,19 @@ menu "aLog Project Configuration"
             int "WiFi Task Refresh Period (ms)"
             default 10000
 
+        config APP_TIME_TASK_STACK
+            int "TIME Task Stack Size"
+            range 1536 16384
+            default 2048
+            help
+                Stack size allocated for the time synchronization and RTC update task.
     endmenu
 
     menu "Network configuration"
 
         config APP_WIFI_STA_SSID
             string "Wi-Fi Station Target SSID"
-            default "hp840"
+            default "hp840g8"
 
         config APP_WIFI_STA_PASS
             string "Wi-Fi Station Password"

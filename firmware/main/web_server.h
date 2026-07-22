@@ -8,12 +8,13 @@
 #define WEB_SERVER_H
 
 #include "esp_err.h"
+#include "external_storage.h"
 
 /**
- * @brief Initializes GPIO actuators for Relays and starts the web server.
+ * @brief Initializes GPIO actuators for Relays and starts the web server with the storage context.
  * @return esp_err_t ESP_OK on success.
  */
-esp_err_t web_server_start(void);
+esp_err_t web_server_start(ext_storage_t *sd_ctx);
 
 /**
  * @brief Stops the web server and cleans up resources.

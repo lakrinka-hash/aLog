@@ -57,7 +57,7 @@ esp_err_t ssd1306_attach(i2c_master_bus_handle_t bus, ssd1306_t *dev, uint8_t ad
 static esp_err_t ssd1306_write_command(ssd1306_t *dev, uint8_t command)
 {
     uint8_t data[2] = {0x00, command}; // Control byte 0x00 for commands
-    return i2c_master_transmit(dev->handle, data, sizeof(data), -1);
+    return i2c_master_transmit(dev->handle, data, sizeof(data), 100);
 }
 
 /* -------------- Write data --------------- */
@@ -66,7 +66,7 @@ static esp_err_t ssd1306_write_data(ssd1306_t *dev, const uint8_t *buffer, size_
     uint8_t data[len+1];
     data[0] = 0x40; // Control byte 0x40 for data
     memcpy(&data[1], buffer, len);
-    return i2c_master_transmit(dev->handle, data, sizeof(data), -1);
+    return i2c_master_transmit(dev->handle, data, sizeof(data), 100);
 }
 
 /* ------------- Write stream -------------- */
@@ -78,7 +78,7 @@ esp_err_t ssd1306_write_stream(ssd1306_t *dev, const uint8_t *buffer, size_t siz
         {.write_buffer = &control_byte, .buffer_size = 1},
         {.write_buffer = buffer,        .buffer_size = size}
     };
-    return i2c_master_multi_buffer_transmit(dev->handle, buf_info_arr, 2, -1);
+    return i2c_master_multi_buffer_transmit(dev->handle, buf_info_arr, 2, 100);
 }
 
 /* -------- Initialization sequence -------- */
@@ -221,7 +221,7 @@ esp_err_t ssd1306_clear(ssd1306_t *dev)
             ret = ssd1306_goto(dev, 0, page);
             if (ret != ESP_OK) return ret;
         }
-        ret = i2c_master_transmit(dev->handle, nullpage, sizeof(nullpage), -1);
+        ret = i2c_master_transmit(dev->handle, nullpage, sizeof(nullpage), 100);
         if (ret != ESP_OK) return ret;
     }
     return ESP_OK;

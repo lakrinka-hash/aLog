@@ -1,8 +1,10 @@
 services:
   # --- INFLUXDB ---
   influxdb:
-    image: influxdb:2.7
+    image: influxdb:2.7.12
     container_name: alog_influxdb
+    env_file:
+      - .env
     ports:
       - "8086:8086"
     environment:
@@ -22,6 +24,8 @@ services:
   telegraf:
     image: telegraf:1.30
     container_name: alog_telegraf
+    env_file:
+      - .env
     ports:
       - "5000:5000/udp"
     environment:
@@ -36,11 +40,14 @@ services:
 
   # --- GRAFANA ---
   grafana:
-    image: grafana/grafana-oss:latest
+    image: grafana/grafana-oss:13.0.2
     container_name: alog_grafana
+    env_file:
+      - .env
     ports:
       - "3000:3000"
     environment:
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
       - INFLUXDB_ADMIN_TOKEN=${INFLUXDB_ADMIN_TOKEN}
       - INFLUXDB_ORG=${INFLUXDB_ORG}
       - INFLUXDB_BUCKET=${INFLUXDB_BUCKET}

@@ -1,12 +1,16 @@
 {
   "folders": [
     { "name": "🛠️ Firmware (ESP-IDF)", "path": "firmware" },
+    { "name": "🌐 Web Console (Source)", "path": "web_src" },
+    { "name": "🧰 Automation Tools", "path": "tools" },
     { "name": "📊 Telemetry (DevOps)", "path": "telemetry" },
     { "name": "📂 Docs", "path": "docs" }
   ],
   "settings": {
     "files.exclude": {
       "**/firmware": true,
+      "**/web_src": true,
+      "**/tools": true,
       "**/telemetry": true,
       "**/docs": true,
       "**/.git": true
@@ -16,7 +20,6 @@
     "clangd.arguments": [
       "--background-index",
       "--query-driver=**",
-      // Используем точное имя папки воркспейса со слэшем!
       "--compile-commands-dir=${workspaceFolder:🛠️ Firmware (ESP-IDF)}/build",
       "--clang-tidy"
     ]

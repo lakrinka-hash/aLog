@@ -15,14 +15,15 @@
 #include "system_state.h"
 #include "system_time.h"
 #include "wifi_app.h"
+#include "app_config.h"
 #include "udp_task.h"
 
 void udp_task(void *pvParameters)
 {
     ESP_LOGI("log_task", "LOG task started...");
 
-    sys_state_relays_t relays;   // local copy of the relays state
-    sys_state_adc_t adc_data;    // local copy of the ADC state
+    sys_state_relays_t relays;  // local copy of the relays state
+    sys_state_adc_t adc_data;   // local copy of the ADC state
     sys_state_wifi_t wifi_state; // local copy of the Wi-Fi state
 
     while (1) {
@@ -40,7 +41,7 @@ void udp_task(void *pvParameters)
             uint32_t usec = (uint32_t)(timestamp % 1000000ULL);
 
             char line[140];
-            int len = snprintf(line, sizeof(line), "%" PRIu32 ".%06" PRIu32 ",%.4f,%d,%.4f,%d,%.4f,%d,%d\n",
+            int len = snprintf(line, sizeof(line), "%" PRIu32 ".%06" PRIu32 ";%.4f;%d;%.4f;%d;%.4f;%d;%d\n",
                     sec, usec,
                     adc_data.voltage, adc_data.voltage_err ? 1 : 0,
                     adc_data.current, adc_data.current_err ? 1 : 0,
@@ -55,10 +56,13 @@ void udp_task(void *pvParameters)
                 }
             }
 
+            app_config_t app_cfg;
+            app_config_get(&app_cfg);
+
             struct sockaddr_in dest_addr;
-            dest_addr.sin_addr.s_addr = inet_addr(CONFIG_APP_UDP_TARGET_IP);
+            dest_addr.sin_addr.s_addr = inet_addr(app_cfg.udp_ip);
             dest_addr.sin_family = AF_INET;
-            dest_addr.sin_port = htons(CONFIG_APP_UDP_TARGET_PORT);
+            dest_addr.sin_port = htons(app_cfg.udp_port);
 
             int err = sendto(sock, line, len, 0, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
 
